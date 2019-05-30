@@ -1,6 +1,4 @@
 import os
-import gc
-import numpy as np
 from PySide2 import QtCore, QtGui, QtWidgets
 
 class Navigation(object):
@@ -46,49 +44,48 @@ class Navigation(object):
 
 
 class Drawing(QtWidgets.QWidget):
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.drawing = False
         self.setGeometry(parent.geometry())
 
-        # constants
         self.pen = QtGui.QPen(QtCore.Qt.cyan, 3, QtCore.Qt.SolidLine)
+        self.path = QtGui.QPainterPath()
 
-        self.image = QtGui.QPixmap(parent.width(), parent.height())
-        self.image.fill(QtCore.Qt.transparent)
-
-        self.painter = QtGui.QPainter(self.image)
-        self.painter.setPen(self.pen)
-        #self.image.fill(QtCore.Qt.transparent)
-
+    # to implement later
     def isValidPoint(self, point):
         return 0 <= point.x() <= self.width() and 0<= point.y() <= self.height()
         #return 500 >= point.x() >= 0 and 500 >= point.y() >= 0
 
-    def mousePressEvent(self, e):
-        if e.button() == QtCore.Qt.LeftButton:
-            self.drawing = True
-            self.firstPoint = e.pos()
-            self.lastPoint = e.pos()
-
-    def mouseMoveEvent(self, e):
-        if e.buttons() and QtCore.Qt.LeftButton and self.drawing:
-            self.painter.drawLine(self.lastPoint, e.pos())
-            self.lastPoint = e.pos()
-            self.update()
-
-    def mouseReleaseEvent(self, e):
-        if e.button == QtCore.Qt.LeftButton:
-            self.painter.drawLine(self.lastPoint, self.firstPoint)
-            self.update()
-            self.drawing = False
-
-    def paintEvent(self, e):
-        painter = QtGui.QPainter(self)
-        painter.drawPixmap(self.rect(), self.image)
-        painter.setPen(self.pen)
-        painter.drawLine()
-
-    def destroy(self, idk):
-        self.painter.eraseRect(self.width(), self.height())
+    # shrug is purely for the function of the partial
+    # partial bc otherwise for some reason they're all auto-clicked?
+    def destroy(self, shrug):
+        self.path = QtGui.QPainterPath()
         self.update()
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.setPen(self.pen)
+        painter.drawPath(self.path)
+
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            self.path.moveTo(event.pos())
+            self.drawing = True
+            self.lastPoint = event.pos()
+            self.firstPoint = event.pos()
+
+            self.update()
+
+    def mouseMoveEvent(self, event):
+        if event.buttons() and QtCore.Qt.LeftButton and self.drawing:
+            self.path.lineTo(event.pos())
+            self.lastPoint = event.pos()
+            self.update()
+
+    def mouseReleaseEvent(self, event):
+        if event.button == QtCore.Qt.LeftButton:
+            self.path.lineTo(self.firstPoint)
+            self.drawing = False
+            self.update()

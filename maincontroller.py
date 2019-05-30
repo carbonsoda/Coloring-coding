@@ -12,11 +12,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = MyUi()
         self.ui.setupUi(self)
         self.setMenuBar(self.ui.menubar)
-        #QtWidgets.QMainWindow.__init__(self)
-        # self.setupUi(self)
 
         self.navi = logic.Navigation()
-
         self.drawer = logic.Drawing(self.ui.centerArea)
         self.ui.centerBox.addWidget(self.drawer, 0, 1, 0, 1)
 

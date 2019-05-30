@@ -54,19 +54,7 @@ class Ui_main(object):
         self.photolbl = QtWidgets.QLabel(self.centerArea)
         self.photolbl.resize(790, 520)  # not big fan of hardcode but :/
 
-        # photo = QtGui.QPixmap('placeholder.png')
-        # self.photolbl.setPixmap(photo)
-        # self.photolbl.setScaledContents(True)
-
         self.centerBox.addWidget(self.photolbl, 0, 1, 0, 1)
-
-    def drawlayersetup(self):
-        self.drawPnl = QtWidgets.QWidget(self)
-        self.drawPnl.setGeometry(QtCore.QRect(20, 60, 790, 520))
-        self.drawPnl.setStyleSheet("background-color: transparent")
-
-
-        self.centerBox.addWidget(self.drawPnl, 0, 1, 0, 1)
 
     def centersetup(self):
         self.centerArea = QtWidgets.QFrame(self.window)
@@ -74,7 +62,6 @@ class Ui_main(object):
         self.centerBox = QtWidgets.QGridLayout(self.centerArea)
 
         self.imglayersetup()
-        # self.drawlayersetup()
 
     def bottomsetup(self):
         self.bottom = QtWidgets.QWidget(self.window)
