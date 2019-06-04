@@ -2,21 +2,25 @@ from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_main(object):
     def setupUi(self, MainWindow):
-        MainWindow.resize(835, 708)
+        MainWindow.resize(835, 708)  # resize to 2x: (1670, 1410)
         self.window = QtWidgets.QWidget(MainWindow)
-        self.window.setFixedSize(830, 705)
+        self.window.setFixedSize(830, 705)  # resize to 2x: (1660, 1410)
+
+        # constants
+        self.w = self.window.width()
+        self.h = self.window.height()
 
         # Aesthetics
         self.font = QtGui.QFont("Arial", 12)  # default size
         self.fontS = QtGui.QFont("Arial", 9)  # small
         self.fontL = QtGui.QFont("Arial", 14)  # large
 
+        self.sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+
         self.menusetup()
-        # bring focus to the content stuff below? I think?
-        # MainWindow.setCentralWidget(self.window)
-        # Content
         self.mainsetup()
 
+        # Until menusetup actually works :/
         self.temp()
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -27,32 +31,44 @@ class Ui_main(object):
         self.bottomsetup()
 
     def topsetup(self):
-        self.top = QtWidgets.QWidget(self.window)
-        self.top.setContentsMargins(-1, -1, 200, 6)
-        self.top.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.top.setGeometry(QtCore.QRect(20, 10, 830, 40))
-        self.TopBox = QtWidgets.QGridLayout(self.top)
-        self.TopBox.setContentsMargins(-1, -1, -20, 6)
-
         # actual buttons
-        self.PgBackBtn = QtWidgets.QPushButton("<< Previous Page", self.window)
-        self.PgNextBtn = QtWidgets.QPushButton("Next Page >>", self.window)
+        self.PgBackBtn = QtWidgets.QPushButton("<< Prev Page", self.window)
+        # self.PgBackBtn.setIcon(QtGui.QIcon(QtGui.QPixmap('left.png')))
+        # self.PgBackBtn.setStyleSheet("QPushButton { text-align: left; }")
+        self.PgBackBtn.setSizePolicy(self.sizepolicy)
 
-        # adding to the top area
+        self.PgNextBtn = QtWidgets.QPushButton("Next Page >>", self.window)
+        # self.PgNextBtn.setIcon(QtGui.QIcon(QtGui.QPixmap('right.png')))
+        # self.PgNextBtn.setStyleSheet("QPushButton { text-align: right;}")
+        self.PgNextBtn.setSizePolicy(self.sizepolicy)
+
+        # grid/top area setup
+        self.top = QtWidgets.QWidget(self.window)
+        self.top.setContentsMargins(-1, -1, 0, 2)
+        self.top.setGeometry(QtCore.QRect(20, 10, 790, 40))
+        self.TopBox = QtWidgets.QGridLayout(self.top)
+        self.TopBox.setGeometry(QtCore.QRect(20, 10, 789, 40))
+        self.TopBox.setContentsMargins(-1, -1, -20, 6)
+        self.spacer = QtWidgets.QSpacerItem(150, self.top.height())
+
+        # adding stuff ontop the top grid layout
         self.TopBox.addWidget(self.PgBackBtn, 0, 0, 0, 1)
         self.TopBox.addWidget(self.PgNextBtn, 0, 4, 0, 1)
-        self.TopBox.addItem(QtWidgets.QSpacerItem(235, 20), 0, 1, 1, 1)  # spacer
+        self.TopBox.addItem(self.spacer, 0, 1, 1, 1)
+
 
     def temp(self):
         self.loadbtn = QtWidgets.QPushButton("Load Folder", self.window)
-
         self.TopBox.addWidget(self.loadbtn, 0, 2, 1, 1)
-        self.TopBox.addItem(QtWidgets.QSpacerItem(235, 20), 0, 3, 1, 1)  # spacer
+        # self.TopBox.addWidget(self.loadbtn, 0, 2, 0, 1, QtCore.Qt.AlignHCenter)
+        spacer2 = self.spacer
+        self.TopBox.addItem(spacer2, 0, 3, 1, 1)  # spacer
+
 
     # sets up everything for img under layer
     def imglayersetup(self):
         self.photolbl = QtWidgets.QLabel(self.centerArea)
-        self.photolbl.resize(790, 520)  # not big fan of hardcode but :/
+        self.photolbl.resize(self.w, 520)  # not big fan of hardcode but :/
 
         self.centerBox.addWidget(self.photolbl, 0, 1, 0, 1)
 
@@ -68,9 +84,9 @@ class Ui_main(object):
         self.bottom.setGeometry(QtCore.QRect(20, 580, 791, 94))
 
 
-        self.ObjextInput = QtWidgets.QLineEdit(self.bottom)
-        self.ObjextInput.setPlaceholderText("What did you draw?")
-        self.ObjextInput.setFont(self.fontL)
+        self.ObjName = QtWidgets.QLineEdit(self.bottom)
+        self.ObjName.setPlaceholderText("What did you draw?")
+        self.ObjName.setFont(self.fontL)
 
         # Save button -- entire drawing + object name
         self.SaveBtn = QtWidgets.QPushButton('Save Object',self.bottom)
@@ -83,7 +99,7 @@ class Ui_main(object):
         # self.BotBox.setContentsMargins(0, 10, 0, 0)
         self.BotBox.addWidget(self.Tools, 0, 0, 1, 1)
         self.BotBox.addItem(QtWidgets.QSpacerItem(40, 20), 0, 1, 1, 1)
-        self.BotBox.addWidget(self.ObjextInput, 0, 2, 1, 1)
+        self.BotBox.addWidget(self.ObjName, 0, 2, 1, 1)
         self.BotBox.addWidget(self.SaveBtn, 2, 2, 1, 1)
 
 
@@ -119,7 +135,7 @@ class Ui_main(object):
         # MENU BAR
         self.menubar = QtWidgets.QMenuBar(self.window)
         self.menubar.setNativeMenuBar(True)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 835, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, self.w, 21))
         self.menuFile = QtWidgets.QMenu(self.menubar)
 
         # Loading in folder of picture book photos
