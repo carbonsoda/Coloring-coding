@@ -2,9 +2,9 @@ from PySide2 import QtCore, QtGui, QtWidgets
 
 class Ui_main(object):
     def setupUi(self, MainWindow):
-        MainWindow.resize(835, 708)  # resize to 2x: (1670, 1410)
+        MainWindow.resize(960, 720)
         self.window = QtWidgets.QWidget(MainWindow)
-        self.window.setFixedSize(830, 705)  # resize to 2x: (1660, 1410)
+        self.window.setFixedSize(960, 720)
 
         # constants
         self.w = self.window.width()
@@ -16,11 +16,9 @@ class Ui_main(object):
         self.fontL = QtGui.QFont("Arial", 14)  # large
 
         self.sizepolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
-
-        self.menusetup()
         self.mainsetup()
 
-        # Until menusetup actually works :/
+        # Temporary re-located folder loader
         self.temp()
 
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -33,29 +31,25 @@ class Ui_main(object):
     def topsetup(self):
         # actual buttons
         self.PgBackBtn = QtWidgets.QPushButton("<< Prev Page", self.window)
-        # self.PgBackBtn.setIcon(QtGui.QIcon(QtGui.QPixmap('left.png')))
-        # self.PgBackBtn.setStyleSheet("QPushButton { text-align: left; }")
         self.PgBackBtn.setSizePolicy(self.sizepolicy)
 
         self.PgNextBtn = QtWidgets.QPushButton("Next Page >>", self.window)
-        # self.PgNextBtn.setIcon(QtGui.QIcon(QtGui.QPixmap('right.png')))
-        # self.PgNextBtn.setStyleSheet("QPushButton { text-align: right;}")
         self.PgNextBtn.setSizePolicy(self.sizepolicy)
 
         # grid/top area setup
         self.top = QtWidgets.QWidget(self.window)
         self.top.setContentsMargins(-1, -1, 0, 2)
-        self.top.setGeometry(QtCore.QRect(20, 10, 790, 40))
+        size = QtCore.QRect(10, 10,941, 50)
+        self.top.setGeometry(size)
         self.TopBox = QtWidgets.QGridLayout(self.top)
-        self.TopBox.setGeometry(QtCore.QRect(20, 10, 789, 40))
+        self.TopBox.setGeometry(self.top.geometry())
         self.TopBox.setContentsMargins(-1, -1, -20, 6)
-        self.spacer = QtWidgets.QSpacerItem(150, self.top.height())
+        self.spacer = QtWidgets.QSpacerItem(170, self.top.height())
 
         # adding stuff ontop the top grid layout
         self.TopBox.addWidget(self.PgBackBtn, 0, 0, 0, 1)
         self.TopBox.addWidget(self.PgNextBtn, 0, 4, 0, 1)
         self.TopBox.addItem(self.spacer, 0, 1, 1, 1)
-
 
     def temp(self):
         self.loadbtn = QtWidgets.QPushButton("Load Folder", self.window)
@@ -64,24 +58,20 @@ class Ui_main(object):
         spacer2 = self.spacer
         self.TopBox.addItem(spacer2, 0, 3, 1, 1)  # spacer
 
-
-    # sets up everything for img under layer
-    def imglayersetup(self):
-        self.photolbl = QtWidgets.QLabel(self.centerArea)
-        self.photolbl.resize(self.w, 520)  # not big fan of hardcode but :/
-
-        self.centerBox.addWidget(self.photolbl, 0, 1, 0, 1)
-
     def centersetup(self):
         self.centerArea = QtWidgets.QFrame(self.window)
-        self.centerArea.setGeometry(QtCore.QRect(20, 60, 790, 520))
+        self.centerArea.setGeometry(QtCore.QRect(10, 60, 941, 520))
         self.centerBox = QtWidgets.QGridLayout(self.centerArea)
 
-        self.imglayersetup()
+        self.photolbl = QtWidgets.QLabel(self.centerArea)
+        self.photolbl.resize(941, 520)  # not big fan of hardcode but :/
+        self.photolbl.setText("Please load a picture folder to begin.")
+        self.photolbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.centerBox.addWidget(self.photolbl, 0, 1, 0, 1)
 
     def bottomsetup(self):
         self.bottom = QtWidgets.QWidget(self.window)
-        self.bottom.setGeometry(QtCore.QRect(20, 580, 791, 94))
+        self.bottom.setGeometry(QtCore.QRect(10, 580, 941, 94))
 
 
         self.ObjName = QtWidgets.QLineEdit(self.bottom)
@@ -107,13 +97,9 @@ class Ui_main(object):
     # color picker to be implemented eventually
     # Helper method for self.bottomsetup()
     def toolssetup(self):
-        # REDO button
-        self.RedoBtn = QtWidgets.QPushButton('Redo',self.bottom)
-        # UNDO button
+        self.EraseBtn = QtWidgets.QPushButton('Erase',self.bottom)
         self.UndoBtn = QtWidgets.QPushButton('Undo',self.bottom)
-        # RESET button
         self.ResetBtn = QtWidgets.QPushButton('Reset',self.bottom)
-        # NEW OBJECT button
         self.NewObjBtn = QtWidgets.QPushButton('New',self.bottom)
 
         # Set font
@@ -121,7 +107,7 @@ class Ui_main(object):
         self.NewObjBtn.setFont(self.font)
         self.ResetBtn.setFont(self.font)
         self.UndoBtn.setFont(self.font)
-        self.RedoBtn.setFont(self.font)
+        self.EraseBtn.setFont(self.font)
 
         # Make tool grid + add the buttons on
         self.Tools = QtWidgets.QWidget(self.bottom)
@@ -129,30 +115,4 @@ class Ui_main(object):
         self.ToolGrid.addWidget(self.NewObjBtn, 0, 0, 1, 1)
         self.ToolGrid.addWidget(self.ResetBtn, 0, 1, 1, 1)
         self.ToolGrid.addWidget(self.UndoBtn, 0, 2, 1, 1)
-        self.ToolGrid.addWidget(self.RedoBtn, 0, 3, 1, 1)
-
-    def menusetup(self):
-        # MENU BAR
-        self.menubar = QtWidgets.QMenuBar(self.window)
-        self.menubar.setNativeMenuBar(True)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, self.w, 21))
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-
-        # Loading in folder of picture book photos
-        self.PicLoadBtn = QtWidgets.QAction(self.window)
-        # SUBJECT ACTIONS
-        self.SubjNewBtn = QtWidgets.QAction(self.window)  # Create new Subject file
-        self.SubjLoadBtn = QtWidgets.QAction(self.window)  # Load existing Subject file
-        self.SubjSave = QtWidgets.QAction(self.window)
-
-        # self.ExitBtn = QtWidgets.QAction(MainWindow)
-
-        self.menuFile.addAction(self.PicLoadBtn)
-        self.menuFile.addSeparator()
-        self.menuFile.addAction(self.SubjNewBtn)
-        self.menuFile.addAction(self.SubjLoadBtn)
-        self.menuFile.addAction(self.SubjSave)
-        # self.menuFile.addSeparator()
-        # self.menuFile.addAction(self.ExitBtn)
-        self.menubar.addAction(self.menuFile.menuAction())
-
+        self.ToolGrid.addWidget(self.EraseBtn, 0, 3, 1, 1)

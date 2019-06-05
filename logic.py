@@ -58,8 +58,10 @@ class Navigation(object):
                 self.index -= 1
                 self.page -= 1
 
-    def load_pic(self, photolabel, isSaved = True, next = 0):
-        if isSaved:
+    def load_pic(self, photolabel, hasWork, next = 0):
+        if hasWork:
+            self.reminderMsg()
+        else:
             if next is not 0:  # if next = 0, inital load-up
                 self.btnsindex(next)
 
@@ -69,8 +71,6 @@ class Navigation(object):
             photolabel.setPixmap(photo)
             photolabel.setScaledContents(True)
             photolabel.show()
-        else:
-            self.reminderMsg()
 
     def loadErrorMsg(self, isError):
         msg = QtWidgets.QMessageBox()
@@ -103,8 +103,6 @@ class Drawing(QtWidgets.QWidget):
         super().__init__(parent)
         self.setGeometry(parent.geometry())
         self.path = QtGui.QPainterPath()
-        self.firstPoint = QtCore.QPoint()
-        self.recorder = []
 
         self.drawing = False
         self.hasWork = False
@@ -130,8 +128,6 @@ class Drawing(QtWidgets.QWidget):
         if event.button() == QtCore.Qt.LeftButton and self.readyarea:
             self.path.moveTo(event.pos())
             self.drawing = True
-            self.firstPoint = event.pos()
-            self.recorder.append(event.pos())
 
     def mouseMoveEvent(self, event):
         if event.buttons() and QtCore.Qt.LeftButton and self.drawing:
@@ -141,44 +137,19 @@ class Drawing(QtWidgets.QWidget):
             p.setBackgroundMode(QtCore.Qt.TransparentMode)
             p.drawPath(self.path)
 
-            self.hasWork = True
             self.update()
 
     def mouseReleaseEvent(self, event):
-        if event.button == QtCore.Qt.LeftButton and self.drawing:
+        if self.drawing:
             self.drawing = False
             self.hasWork = True
-
-    def finishBlob(self, endPoint):
-        painter = QtGui.QPainter(self)
-        painter.setPen(self.pen)
-        painter.drawTo(endPoint)
-
-
-    def isValidPoint(self, point):
-        self.xValid = True
-        self.yValid = True
-        if not (0 <= point.x() <= self.width()):
-            self.xValid = False
-        if not (0 <= point.y() <= self.height()):
-            self.yValid = False
-        return self.xValid and self.yValid
-
-    # 3 cases for what needs fixing
-    def pointFixer(self, point):
-        if not self.xValid:
-            if not self.yValid:
-                pass
-            else:
-                point.x = self.width()
-        elif not self.yValid:
-            pass
-        return point
 
     def destroy(self, new):
         self.path = QtGui.QPainterPath()
         self.hasWork = False
         self.image = self._drawingLayer()
+        self.step = 0
+        self.strokes.clear()
         self.update()
 
     def savePixels(self, filename):
