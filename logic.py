@@ -5,7 +5,7 @@ class Navigation(object):
     def __init__(self):
         self.folder = []
         self.foldername = ""
-        self.filenametemplate = ""
+        self.path = ""
 
         self.index = 0
         self.page = 1
@@ -23,12 +23,15 @@ class Navigation(object):
         directory = QtWidgets.QFileDialog.getExistingDirectory(options=QtWidgets.QFileDialog.ShowDirsOnly)
 
         fileext = (".jpg", ".jpeg", ".png", ".gif")
+        fileschema = ("Slide", "Page", "Pg")
         pathing = ""
 
         for path, _, files in os.walk(directory):
             pathing = path
             for img in files:
-                if img.endswith(fileext):
+                # to avoid accidental mis-placed coded files
+                # for sake of runtime though, not sure if really needed
+                if img.endswith(fileext) and img.startswith(fileschema):
                     self.folder.append(path + os.sep + img)
             break
 
@@ -37,15 +40,24 @@ class Navigation(object):
             return False
 
         self.foldername = os.path.split(directory)[1]
+        print(self.foldername)
+        print("I am folder name\n")
         self._load_folder(pathing)
         return True
 
     def _load_folder(self, directory):
-        newpath = os.path.join(directory, 'Coded').replace('\\','/')
+        newpath = os.path.join(directory, 'Coded').replace('\\', '/')
         if not os.path.exists(newpath):
             os.makedirs(newpath)
-        temp = newpath + os.sep + self.foldername + '_pg_'
-        self.filenametemplate = temp.replace('\\', '/')
+        self.path = newpath
+        os.chmod(newpath, 0o775)
+        self.make_executable(newpath)
+
+    def make_executable(self, path):
+        mode = os.stat(path).st_mode
+        mode |= (mode & 0o444) >> 2  # copy R bits to X
+        os.chmod(path, mode)
+        self.path = path
 
     # next = boolean
     def btnsindex(self, next):
@@ -58,19 +70,30 @@ class Navigation(object):
                 self.index -= 1
                 self.page -= 1
 
-    def load_pic(self, photolabel, hasWork, next = 0):
+    def load_pic(self, photolabel, hasWork, next=0):
         if hasWork:
-            self.reminderMsg()
+            self.reminderMsg(photolabel, next)
         else:
             if next is not 0:  # if next = 0, inital load-up
                 self.btnsindex(next)
 
             image_path = self.folder[self.index]
-            photo = QtGui.QPixmap(image_path)
+            pix = QtGui.QPixmap(image_path)
+            # photo = pix.scaledToWidth(photolabel.width())
+            photo = pix.scaled(photolabel.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
 
             photolabel.setPixmap(photo)
-            photolabel.setScaledContents(True)
+            photolabel.setAlignment(QtCore.Qt.AlignCenter)
             photolabel.show()
+            return True
+        return False
+
+    # manages resizing event
+    def imageResize(self, labelSize):
+        image_path = self.folder[self.index]
+        pix = QtGui.QPixmap(image_path)
+        photo = pix.scaled(labelSize, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        return photo
 
     def loadErrorMsg(self, isError):
         msg = QtWidgets.QMessageBox()
@@ -88,14 +111,17 @@ class Navigation(object):
 
         msg.exec_()
 
-    def reminderMsg(self):
+    def reminderMsg(self, label, next):
+        print(next)
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Warning)
         msg.setWindowTitle("Save Reminder")
         msg.setText("Please save your work before moving on")
         msg.setInformativeText("Type object's name and click the save button")
+        # msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Discard)
 
         msg.exec_()
+
 
 class Drawing(QtWidgets.QWidget):
 
@@ -103,6 +129,11 @@ class Drawing(QtWidgets.QWidget):
         super().__init__(parent)
         self.setGeometry(parent.geometry())
         self.path = QtGui.QPainterPath()
+        # self.first = QtCore.QPoint()  # first clicked point
+        self.p1 = QtCore.QPoint()
+        self.p2 = QtCore.QPoint()
+        self.strokes = []
+        self.step = 0  # step 0 is blank canvas
 
         self.drawing = False
         self.hasWork = False
@@ -110,11 +141,14 @@ class Drawing(QtWidgets.QWidget):
 
         self.pen = QtGui.QPen(QtCore.Qt.cyan, 3, QtCore.Qt.SolidLine)
 
-        self.image = self._drawingLayer()
+        self.image = self._layerCreate()
 
-    def _drawingLayer(self):
+    def _layerCreate(self):
         pixmap = QtGui.QPixmap('gui/Untitled.png')
         return pixmap.scaled(self.width(), self.height())
+
+    def layerResize(self, labelSize):
+        self.image = self.image.scaled(labelSize, QtCore.Qt.KeepAspectRatio)
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
@@ -128,10 +162,14 @@ class Drawing(QtWidgets.QWidget):
         if event.button() == QtCore.Qt.LeftButton and self.readyarea:
             self.path.moveTo(event.pos())
             self.drawing = True
+            self.p1 = event.pos()
+            if self.step == 0:  # for undo function
+                self.strokes.append(self.path)
 
     def mouseMoveEvent(self, event):
         if event.buttons() and QtCore.Qt.LeftButton and self.drawing:
             self.path.lineTo(event.pos())
+            self.p2 = event.pos()
             p = QtGui.QPainter(self.image)
             p.setPen(self.pen)
             p.setBackgroundMode(QtCore.Qt.TransparentMode)
@@ -141,19 +179,47 @@ class Drawing(QtWidgets.QWidget):
 
     def mouseReleaseEvent(self, event):
         if self.drawing:
+            self.strokes.append(self.path)  # saves current state of painterpath
+            self.step += 1
+
+            p = QtGui.QPainter(self.image)
+            p.setPen(self.pen)
+            p.setBackgroundMode(QtCore.Qt.TransparentMode)
+            p.drawLine(self.p1, self.p2)
+            self.update()
+
             self.drawing = False
             self.hasWork = True
+            self.p1.isNull()
+            self.p2.isNull()
+
+    def undoStroke(self):
+        self.path = self.strokes.pop()  # restore state
+        self.image = self._layerCreate()  # resets canvas
+
+        # redraws entire path
+        p = QtGui.QPainter(self.image)
+        p.setPen(self.pen)
+        p.setBackgroundMode(QtCore.Qt.TransparentMode)
+        p.drawPath(self.path)
+        p.drawPixmap(self.rect(), self.image)
+
+        self.update()
 
     def destroy(self, new):
         self.path = QtGui.QPainterPath()
         self.hasWork = False
-        self.image = self._drawingLayer()
-        self.step = 0
-        self.strokes.clear()
+        self.image = self._layerCreate()
+        # self.step = 0
+        # self.strokes.clear()
         self.update()
 
     def savePixels(self, filename):
-        self.image.save(filename, "png")
+        with open(filename, 'w'):
+            file = QtCore.QFile(filename)
+        file.open(QtCore.QIODevice.WriteOnly)
+        file.close()
+        self.image.save(file, "png")
         self.hasWork = False
         self.saveConfirmation(True)
 
@@ -167,4 +233,20 @@ class Drawing(QtWidgets.QWidget):
             msg.setText("Please enter an object name")
 
         msg.setWindowTitle("Save Reference Object")
+        msg.exec_()
+
+    def loadErrorMsg(self, isError, file):
+        msg = QtWidgets.QMessageBox()
+
+        if isError:
+            msg.setIcon(QtWidgets.QMessageBox.Information)
+            msg.setWindowTitle("Loading Issue")
+            msg.setText("I can read")
+        else:
+            msg.setIcon(QtWidgets.QMessageBox.Warning)
+            msg.setWindowTitle("Loading Reminder")
+            msg.setText("I can't read")
+            msg.setInformativeText(os.stat(file))
+            print(os.stat(file))
+
         msg.exec_()
