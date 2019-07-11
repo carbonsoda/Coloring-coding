@@ -4,8 +4,9 @@ from PySide2 import QtWidgets, QtCore, QtGui
 
 class Drawing(QtWidgets.QWidget):
     # Center QFrame = parent
-    def __init__(self, parent=None):
+    def __init__(self, filepath, parent=None, color=QtCore.Qt.cyan):
         super().__init__(parent)
+        self.basefilepath = filepath
         self.path = QtGui.QPainterPath()
         self.pathhelper = QtGui.QPainterPath()
         self.p1 = QtCore.QPoint()
@@ -19,7 +20,7 @@ class Drawing(QtWidgets.QWidget):
         self.hasWork = False
         self.readyarea = False
 
-        self.color = QtGui.QColor(QtCore.Qt.cyan)  # default color
+        self.color = QtGui.QColor(color)  # default color
         self.pen = QtGui.QPen(self.color, 3, QtCore.Qt.SolidLine)
 
         self.image = self.layerCreate()
@@ -29,13 +30,16 @@ class Drawing(QtWidgets.QWidget):
         self.pen.setColor(self.color)
         self.update()
 
-    def layerCreate(self, size=None):
-        layer = QtGui.QPixmap("gui/Untitled.png")
+    def layerCreate(self, size=None, lblgeo=None):
+        layerpath = os.path.join(self.basefilepath, 'gui/Untitled.png').replace('\\', '/')
+        layer = QtGui.QPixmap(layerpath)
         if size or self.picsize:
             if size:
                 self.setFixedSize(size)
                 self.picsize = size
             layer = layer.scaled(self.picsize, QtCore.Qt.IgnoreAspectRatio, QtCore.Qt.FastTransformation)
+            if lblgeo:
+                self.setGeometry(lblgeo)
         return layer
 
     def paintEvent(self, event):
@@ -47,6 +51,7 @@ class Drawing(QtWidgets.QWidget):
         painter.drawPath(self.pathhelper)
 
         painter.drawPixmap(event.rect(), self.image, self.rect())
+
         if self.hasWork:
             brush = self.color
             brush.setAlpha(100)
@@ -55,7 +60,7 @@ class Drawing(QtWidgets.QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton and self.readyarea:
-            # avoid everything refilled per mouseRelease
+            # avoids everything being refilled per mouseRelease
             self.pathhelper = QtGui.QPainterPath()
 
             self.path.moveTo(event.pos())
@@ -93,38 +98,45 @@ class Drawing(QtWidgets.QWidget):
 
     def undoStroke(self):
         del self.strokeshelp[-1]
-
         if len(self.strokeshelp) < 1:
             self.mydestroy()
         else:
-            self.path = QtGui.QPainterPath()
-            self.pathhelper = QtGui.QPainterPath()
-            self.image = self.layerCreate()  # resets canvas
+            self.fillpaths()
+        
+    def fillpaths(self):
+        self.path = QtGui.QPainterPath()
+        self.pathhelper = QtGui.QPainterPath()
+        self.image = self.layerCreate()  # resets canvas
 
-            # redraws entire path
-            p = QtGui.QPainter(self.image)
-            p.setPen(self.pen)
-            p.setBackgroundMode(QtCore.Qt.TransparentMode)
-            brush = QtGui.QColor(self.color)
-            brush.setAlpha(100)
+        # redraws entire path
+        p = QtGui.QPainter(self.image)
+        p.setPen(self.pen)
+        p.setBackgroundMode(QtCore.Qt.TransparentMode)
+        brush = QtGui.QColor(self.color)
+        brush.setAlpha(80)
 
-            for blob in self.strokeshelp:
-                p.drawPath(blob)
-                p.drawPixmap(self.rect(), self.image, self.rect())
-                self.path.addPath(blob)
-            p.fillPath(self.path, brush)
+        for blob in self.strokeshelp:
+            p.drawPath(blob)
+            self.path.addPath(blob)
 
-            self.update()
+        self.path.setFillRule(QtCore.Qt.WindingFill)
 
-    def mydestroy(self):
+        p.fillPath(self.path, brush)
+        p.drawPixmap(self.rect(), self.image, self.rect())
+        self.update()
+
+    def mydestroy(self, size=None):
         self.path = QtGui.QPainterPath()
         self.pathhelper = QtGui.QPainterPath()
         self.strokeshelp.clear()
+
         self.hasWork = False
-        self.image = self.layerCreate()
+        self.image = self.layerCreate(size)
+
         self.update()
 
     def savePixels(self, filepath):
+        self.fillpaths()
         with open(filepath, "w+"):
             self.image.save(filepath, "png")
         os.chmod(filepath, 0o777)
@@ -141,5 +153,6 @@ class Drawing(QtWidgets.QWidget):
         else:
             msg.setIcon(QtWidgets.QMessageBox.Question)
             msg.setText("Please enter an object name")
-        msg.setWindowTitle("Save Reference Object")
+
+        msg.setWindowTitle("Save Coded Object")
         msg.exec_()

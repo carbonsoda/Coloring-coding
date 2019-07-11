@@ -53,13 +53,17 @@ class UiMain:
         self.loadAction.setShortcut(QtGui.QKeySequence('Ctrl+O'))
         self.loadAction.setShortcutContext(QtCore.Qt.ApplicationShortcut)
         self.load2ndAction = QtWidgets.QAction('Load Folder as 2nd Coder')
-        self.load2ndAction.setShortcut((QtGui.QKeySequence('Ctrl+O+P')))
+        self.load2ndAction.setShortcut((QtGui.QKeySequence('Ctrl+P')))
         self.load2ndAction.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
-        self.exitAction = QtWidgets.QAction('Exit')
+        self.exitAction = QtWidgets.QAction('Save && Exit')
+        self.exitAction.setShortcut(QtGui.QKeySequence('Ctrl+E'))
+        self.exitAction.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+
 
         filemenu.addAction(self.loadAction)
         filemenu.addAction(self.load2ndAction)
+        filemenu.addSeparator()
         filemenu.addAction(self.exitAction)
 
         viewmenu = self.menubar.addMenu('View')
