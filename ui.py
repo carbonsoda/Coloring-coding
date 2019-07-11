@@ -79,6 +79,12 @@ class UiMain:
         self.PgNextBtn = QtWidgets.QPushButton("Next Page >>", self.window)
         self.PgNextBtn.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right))
 
+        self.Pglbl = QtWidgets.QLabel('Page\n0', self.window)
+        font = self.fontS
+        font.setWeight(57)
+        self.Pglbl.setFont(font)
+        self.Pglbl.setAlignment(QtCore.Qt.AlignCenter)
+
         # grid/top area setup
         self.top = QtWidgets.QWidget(self.window)
         # self.top.setFixedSize(self.topbotSize)
@@ -86,12 +92,14 @@ class UiMain:
         self.top.setContentsMargins(10, -10, 10, 0)
         self.TopBox = QtWidgets.QGridLayout(self.top)
         self.TopBox.setContentsMargins(-1, -1, -20, 6)
+        self.TopBox.setHorizontalSpacing(100)
         self.spacer = QtWidgets.QSpacerItem(170, self.top.height())
 
         # adding stuff ontop the top grid layout
         self.TopBox.addWidget(self.PgBackBtn, 0, 0, 0, 1)
+        self.TopBox.addWidget(self.Pglbl, 0, 2, 1, 1)
         self.TopBox.addWidget(self.PgNextBtn, 0, 4, 0, 1)
-        self.TopBox.addItem(self.spacer, 0, 1, 2, 1)
+        # self.TopBox.addItem(self.spacer, 0, 1, 2, 1)
 
     def centersetup(self):
         self.center = QtWidgets.QFrame(self.window)

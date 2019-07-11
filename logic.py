@@ -51,10 +51,12 @@ class Navigation:
         if hasWork:
             self.reminderMsg()
             return False
+        elif len(self.imgfolder) < 1:
+            pass
         else:
             # if next = 0, its the inital load
             if next == 1:
-                if (self.page + 1) <= (len(self.pgs) + 1):
+                if (self.page + 1) < len(self.pgs):
                     self.page +=1
             elif next == 2:
                 if (self.page - 1) > 0:

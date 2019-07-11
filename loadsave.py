@@ -49,7 +49,7 @@ class LoadSave:
         if newWork:
             book, title = self._load_folder(folder, [])
             if not book:
-                return None, title
+                return None, None
 
         # theres maybe coded work already
         if issues == 1:
@@ -69,7 +69,7 @@ class LoadSave:
             self.pageobjs = book[3]
             self.book = book
         except KeyError:
-            return None, title
+            return None, None
 
         self.topickle(picklepath, book)
         self.savepath = codedfolder
@@ -92,16 +92,18 @@ class LoadSave:
                             title = file.split('_')[0]
                             break
                         if type(book) is not dict:
-                            return book, 1, title
+                            return None, 1, title
                     except EOFError:
                         # invalid savefile
                         return None, 1, ''
             elif file.endswith('.png') and issues > 0:
-                return None, 1, title
-
-        for item in book[3]:
-            if len(book[3][item]) < 1:
-                return book, 1, title
+                return None, 1, None
+        if len(book) < 4 or not book[3]:
+            return None, 1, title
+        elif book[3]:
+            for item in book[3]:
+                if len(book[3][item]) < 1:
+                    return None, 1, title
 
         return book, 0, title
 

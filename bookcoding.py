@@ -66,6 +66,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.photolbl, self.ui.centerSize, self.drawer.hasWork, direction
         )
         if toDiscard:
+            page = str(self.navi.pgs[self.navi.page])
+            self.ui.Pglbl.setText("Page:\n" + page)
             self.drawer.mydestroy(self.navi.picsize)
 
     def selectdirectory(self, isSecond=False):
@@ -81,6 +83,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.navi.loading(self.IOlogic.load_folder(mode)):
             self.navi.savepath = self.IOlogic.savepath
             self.navi.load_pic(self.ui.photolbl, self.ui.centerSize, False)
+            page = str(self.navi.pgs[self.navi.page])
+            self.ui.Pglbl.setText("Page:\n" + page)
             
             self.ui.photolbl.setBaseSize(self.navi.picsize)
             self.drawer.image = self.drawer.layerCreate(self.navi.picsize, self.ui.photolbl.geometry())
