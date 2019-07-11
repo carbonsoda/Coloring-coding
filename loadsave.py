@@ -98,13 +98,13 @@ class LoadSave:
                         return None, 1, ''
             elif file.endswith('.png') and issues > 0:
                 return None, 1, None
-        if len(book) < 4 or not book[3]:
-            return None, 1, title
+        if not book or book[3] or len(book) < 4:
+            return None, 1, None
         elif book[3]:
             for item in book[3]:
                 if len(book[3][item]) < 1:
                     return None, 1, title
-
+        
         return book, 0, title
 
     def _load_folder(self, folder, book):
