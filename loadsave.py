@@ -103,14 +103,14 @@ class LoadSave:
         elif book[3]:
             for item in book[3]:
                 if len(book[3][item]) < 1:
-                    return None, 1, title
-        
+                    return None, 1, None
+
         return book, 0, title
 
     def _load_folder(self, folder, book):
         fileext = (".jpg", ".jpeg", ".png")
-        fileschema = ("Slide", "Page", "Pg", "P")
-        foldercheck = ('Scans', 'Scans for Python')
+        fileschema = ("slide", "page", "pg", "p")
+        foldercheck = ('Scans', 'Scans for Python', 'Scans for Coding')
 
         bookfiles = {}  # book[2]
         bookobjs = {}  # book[3]
@@ -126,7 +126,8 @@ class LoadSave:
 
             # sort through pages
             for img in files:
-                if img.endswith(fileext) and any(s in img for s in fileschema):
+                lower = img.lower()
+                if lower.endswith(fileext) and any(s in lower for s in fileschema):
                     page = int(re.search(r'\d+', img).group())
                     f = os.path.join(path, img).replace('\\', '/')
                     bookfiles[page] = os.path.join(path, img).replace('\\', '/')
@@ -161,16 +162,9 @@ class LoadSave:
         return objects
 
     def topickle(self, filename, data):
-        savefolder = self.savepath + os.sep + 'helperfiles'
-        if not os.path.exists(savefolder):
-            os.makedirs(savefolder)
-        os.chmod(savefolder, 0o777)
         savepath = os.path.join(self.savepath, filename).replace('\\', '/')
-        savepath2 = os.path.join(savefolder, filename).replace('\\','/')
         try:
             with open(savepath, 'wb') as f:
-                pickle.dump(data, f)
-            with open(savepath2, 'wb') as f:
                 pickle.dump(data, f)
         except TypeError:
             print('Typeerror when pickling!')

@@ -32,6 +32,9 @@ class Navigation:
         if not input:
             self.loadErrorMsg(True)
             return False
+        elif not (input[0] or input[1]):
+            self.loadErrorMsg(True)
+            return False
         else:
             book = input[0]
             title = input[1]
@@ -43,6 +46,8 @@ class Navigation:
             except KeyError:
                 print('hm')
                 self.loadErrorMsg(True)
+                return False
+            except TypeError:
                 return False
 
         return True
